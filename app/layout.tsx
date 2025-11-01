@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OROPURO - Online 24HS",
+  title: "Oro Puro - 24hs En Linea",
   description: "OROPURO - Retiros 24hs, pagos instantáneos, soporte 24/7. El mejor casino online en tus manos.",
   openGraph: {
-    title: "OROPURO - Online 24HS",
+    title: "Oro Puro - 24hs En Linea",
     description: "Retiros 24hs, pagos instantáneos, soporte 24/7. El mejor casino online en tus manos.",
     url: 'https://bet30-casino.pages.dev',
     siteName: 'OROPURO',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "OROPURO - Online 24HS",
+    title: "Oro Puro - 24hs En Linea",
     description: "Retiros 24hs, pagos instantáneos, soporte 24/7.",
     images: ['/og-image.png'],
   },
