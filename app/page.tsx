@@ -62,7 +62,7 @@ export default function Home() {
       <div
         className="fixed inset-0 -z-20"
         style={{
-          backgroundImage: 'url(/joker-background-3.png)',
+          backgroundImage: 'url(/joker-background-3.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
