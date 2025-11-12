@@ -324,14 +324,16 @@ export async function POST(request: NextRequest) {
     // DEBUGGING: Log completo del token (TEMPORAL - REMOVER DESPUÉS)
     console.log('[KOMMO Create Player] Token completo para debugging:', bearerToken);
 
+    const bodyString = JSON.stringify(playerData);
+    console.log('[KOMMO Create Player] Body exacto:', bodyString);
+
     const response = await fetch('https://admin.bet30.store/api/services/app/Players/AddPlayer', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json-patch+json',
         'Authorization': `Bearer ${bearerToken}`,
-        'Accept': 'application/json',
       },
-      body: JSON.stringify(playerData),
+      body: bodyString,
     });
 
     if (!response.ok) {
