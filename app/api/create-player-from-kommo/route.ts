@@ -194,7 +194,6 @@ export async function POST(request: NextRequest) {
     const playerData = {
       userName: username,
       password: password,
-      email: email,
       skinId: "1025c6bf14cd",
       agentId: null,
       language: "es"
