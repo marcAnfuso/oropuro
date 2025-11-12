@@ -42,7 +42,90 @@ function extractLeadIdFromKommo(payload: KommoWebhookPayload): number | null {
 }
 
 /**
- * Envía una nota al lead en KOMMO con las credenciales del jugador
+ * Envía mensaje directo al usuario via WhatsApp (usando canal integrado en KOMMO)
+ */
+async function sendWhatsAppMessageToUser(
+  leadId: number,
+  username: string,
+  password: string
+): Promise<boolean> {
+  const kommoToken = process.env.KOMMO_ACCESS_TOKEN?.trim();
+  const kommoSubdomain = process.env.KOMMO_SUBDOMAIN?.trim();
+  const kommoScopeId = process.env.KOMMO_WHATSAPP_SCOPE_ID?.trim();
+
+  if (!kommoToken || !kommoSubdomain) {
+    console.warn('[KOMMO Create Player] KOMMO_ACCESS_TOKEN o KOMMO_SUBDOMAIN no configurados');
+    return false;
+  }
+
+  if (!kommoScopeId) {
+    console.warn('[KOMMO Create Player] KOMMO_WHATSAPP_SCOPE_ID no configurado - intentando sin scope_id');
+  }
+
+  const messageText = `🎰 ¡Cuenta creada exitosamente!
+
+Usuario: ${username}
+Contraseña: ${password}
+
+Podés iniciar sesión en: https://bet30.blog`;
+
+  try {
+    // Preparar payload con scope_id si está configurado
+    const payload: {
+      conversation_id: number;
+      scope_id?: string;
+      message: { text: string };
+    } = {
+      conversation_id: leadId,
+      message: {
+        text: messageText,
+      },
+    };
+
+    // Agregar scope_id solo si está configurado
+    if (kommoScopeId) {
+      payload.scope_id = kommoScopeId;
+    }
+
+    console.log('[KOMMO Create Player] Enviando mensaje WhatsApp:', {
+      leadId,
+      scopeId: kommoScopeId || 'no configurado',
+    });
+
+    // Enviar mensaje via WhatsApp integrado en KOMMO
+    const response = await fetch(
+      `https://${kommoSubdomain}.kommo.com/api/v4/talks/messages`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${kommoToken}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[KOMMO Create Player] Error al enviar mensaje WhatsApp:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+      });
+      return false;
+    }
+
+    const result = await response.json();
+    console.log('[KOMMO Create Player] Mensaje WhatsApp enviado exitosamente:', result);
+    return true;
+  } catch (error) {
+    console.error('[KOMMO Create Player] Error al enviar WhatsApp:', error);
+    return false;
+  }
+}
+
+/**
+ * Envía una nota al lead en KOMMO con las credenciales del jugador (backup interno)
  */
 async function sendCredentialsToKommo(
   leadId: number,
@@ -62,7 +145,7 @@ async function sendCredentialsToKommo(
 Usuario: ${username}
 Contraseña: ${password}
 
-Podés iniciar sesión en: https://bet30.store`;
+Podés iniciar sesión en: https://bet30.blog`;
 
   const notePayload: KommoNotePayload[] = [
     {
@@ -395,8 +478,14 @@ export async function POST(request: NextRequest) {
 
       console.log('[KOMMO Create Player] Jugador creado exitosamente:', result);
 
-      // Enviar credenciales al lead en KOMMO como nota
-      await sendCredentialsToKommo(leadId, username, password);
+      // Primero intentar enviar mensaje directo via WhatsApp
+      const whatsappSent = await sendWhatsAppMessageToUser(leadId, username, password);
+
+      // Si WhatsApp falla, enviar nota interna como backup
+      if (!whatsappSent) {
+        console.log('[KOMMO Create Player] WhatsApp falló, enviando nota interna como backup...');
+        await sendCredentialsToKommo(leadId, username, password);
+      }
 
       return NextResponse.json({
         success: true,
@@ -404,7 +493,8 @@ export async function POST(request: NextRequest) {
         username: username,
         password: password, // IMPORTANTE: En producción, nunca devuelvas la password en la respuesta
         player_data: result,
-        kommo_note_sent: true,
+        whatsapp_sent: whatsappSent,
+        kommo_note_sent: !whatsappSent, // Solo se envía nota si WhatsApp falla
       });
 
     } catch (axiosError) {
