@@ -215,9 +215,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('[KOMMO Create Player] Error al crear jugador:', errorData);
-      throw new Error(`API error: ${JSON.stringify(errorData)}`);
+      const responseText = await response.text();
+      console.error('[KOMMO Create Player] Error al crear jugador:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: responseText.substring(0, 500) // Primeros 500 chars
+      });
+      throw new Error(`API error ${response.status}: ${responseText.substring(0, 200)}`);
     }
 
     const result = await response.json();
