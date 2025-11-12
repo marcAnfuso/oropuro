@@ -312,6 +312,15 @@ export async function POST(request: NextRequest) {
       throw new Error('PLAYER_API_TOKEN no configurado en variables de entorno');
     }
 
+    console.log('[KOMMO Create Player] Request a bet30:', {
+      url: 'https://admin.bet30.store/api/services/app/Players/AddPlayer',
+      method: 'POST',
+      tokenPresent: !!bearerToken,
+      tokenLength: bearerToken.length,
+      tokenPrefix: bearerToken.substring(0, 10) + '...',
+      body: playerData
+    });
+
     const response = await fetch('https://admin.bet30.store/api/services/app/Players/AddPlayer', {
       method: 'POST',
       headers: {
