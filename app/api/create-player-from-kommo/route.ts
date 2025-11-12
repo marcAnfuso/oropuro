@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import axios from 'axios';
 
 interface KommoWebhookPayload {
   leads?: {
@@ -323,59 +324,67 @@ export async function POST(request: NextRequest) {
 
     // DEBUGGING: Log completo del token (TEMPORAL - REMOVER DESPUÉS)
     console.log('[KOMMO Create Player] Token completo para debugging:', bearerToken);
+    console.log('[KOMMO Create Player] Body exacto:', JSON.stringify(playerData));
 
-    const bodyString = JSON.stringify(playerData);
-    console.log('[KOMMO Create Player] Body exacto:', bodyString);
+    try {
+      const response = await axios.post(
+        'https://admin.bet30.store/api/services/app/Players/AddPlayer',
+        playerData,
+        {
+          headers: {
+            'Content-Type': 'application/json-patch+json',
+            'Authorization': `Bearer ${bearerToken}`,
+            'User-Agent': 'curl/8.0.1',
+          },
+          // Forzar que axios NO redirija automáticamente
+          maxRedirects: 0,
+          // Forzar validación de status codes
+          validateStatus: () => true,
+        }
+      );
 
-    const response = await fetch('https://admin.bet30.store/api/services/app/Players/AddPlayer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json-patch+json',
-        'Authorization': `Bearer ${bearerToken}`,
-        'User-Agent': 'curl/8.0.1',
-      },
-      body: bodyString,
-    });
-
-    if (!response.ok) {
-      const responseText = await response.text();
-      console.error('[KOMMO Create Player] Error al crear jugador:', {
+      console.log('[KOMMO Create Player] Respuesta de bet30:', {
         status: response.status,
         statusText: response.statusText,
-        body: responseText.substring(0, 500) // Primeros 500 chars
+        contentType: response.headers['content-type'],
+        data: typeof response.data === 'string'
+          ? response.data.substring(0, 500)
+          : JSON.stringify(response.data).substring(0, 500)
       });
-      throw new Error(`API error ${response.status}: ${responseText.substring(0, 200)}`);
+
+      // Verificar si es HTML (error)
+      if (response.headers['content-type']?.includes('text/html')) {
+        const htmlPreview = typeof response.data === 'string'
+          ? response.data.substring(0, 500)
+          : String(response.data).substring(0, 500);
+        console.error('[KOMMO Create Player] bet30 retornó HTML en lugar de JSON:', htmlPreview);
+        throw new Error(`bet30 API retornó HTML (status ${response.status}). Posible problema de autenticación o firewall.`);
+      }
+
+      if (response.status !== 200) {
+        throw new Error(`bet30 API error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = response.data;
+
+      console.log('[KOMMO Create Player] Jugador creado exitosamente:', result);
+
+      // Enviar credenciales al lead en KOMMO como nota
+      await sendCredentialsToKommo(leadId, username, password);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Player created successfully',
+        username: username,
+        password: password, // IMPORTANTE: En producción, nunca devuelvas la password en la respuesta
+        player_data: result,
+        kommo_note_sent: true,
+      });
+
+    } catch (axiosError) {
+      console.error('[KOMMO Create Player] Error en request a bet30:', axiosError);
+      throw axiosError;
     }
-
-    // Intentar parsear la respuesta como JSON
-    const responseText = await response.text();
-    console.log('[KOMMO Create Player] Respuesta de bet30:', {
-      status: response.status,
-      contentType: response.headers.get('content-type'),
-      body: responseText.substring(0, 500)
-    });
-
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch {
-      console.error('[KOMMO Create Player] Error al parsear respuesta:', responseText.substring(0, 500));
-      throw new Error(`La API retornó contenido inválido (no JSON): ${responseText.substring(0, 200)}`);
-    }
-
-    console.log('[KOMMO Create Player] Jugador creado exitosamente:', result);
-
-    // Enviar credenciales al lead en KOMMO como nota
-    await sendCredentialsToKommo(leadId, username, password);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Player created successfully',
-      username: username,
-      password: password, // IMPORTANTE: En producción, nunca devuelvas la password en la respuesta
-      player_data: result,
-      kommo_note_sent: true,
-    });
 
   } catch (error) {
     console.error('[KOMMO Create Player] Error:', error);
