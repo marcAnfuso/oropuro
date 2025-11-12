@@ -164,27 +164,27 @@ export async function POST(request: NextRequest) {
 
     // Leer el body como texto primero para ver qué formato tiene
     const rawBody = await request.text();
-    console.log('[KOMMO Create Player] Raw body:', rawBody.substring(0, 500));
+    console.log('[KOMMO Create Player] Raw body (decoded):', decodeURIComponent(rawBody).substring(0, 1000));
 
     // Intentar parsear según el formato
-    let payload: KommoWebhookPayload;
+    let payload: any;
 
     if (contentType?.includes('application/x-www-form-urlencoded')) {
-      // KOMMO envía form-urlencoded, necesitamos parsearlo
+      // KOMMO envía form-urlencoded, convertir a objeto
       const params = new URLSearchParams(rawBody);
-      const leadString = params.get('leads');
-      const contactString = params.get('contacts');
+      payload = {};
 
-      payload = {
-        leads: leadString ? JSON.parse(decodeURIComponent(leadString)) : undefined,
-        contacts: contactString ? JSON.parse(decodeURIComponent(contactString)) : undefined,
-      };
+      // Convertir todos los parámetros a un objeto
+      for (const [key, value] of params.entries()) {
+        console.log('[KOMMO Create Player] Param:', key, '=', value);
+        payload[key] = value;
+      }
     } else {
       // Asumir JSON
       payload = JSON.parse(rawBody);
     }
 
-    console.log('[KOMMO Create Player] Payload parseado:', JSON.stringify(payload, null, 2));
+    console.log('[KOMMO Create Player] Payload completo:', JSON.stringify(payload, null, 2));
 
     // Extraer datos del contacto y lead
     const email = extractEmailFromKommo(payload);
