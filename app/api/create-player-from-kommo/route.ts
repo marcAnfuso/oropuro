@@ -208,20 +208,89 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('[KOMMO Create Player] Datos extraídos:', { leadId, email, name });
-
-    if (!email) {
-      console.warn('[KOMMO Create Player] No se encontró email en el payload');
-      return NextResponse.json(
-        { success: false, error: 'Email not found in payload' },
-        { status: 400 }
-      );
-    }
+    console.log('[KOMMO Create Player] Datos extraídos del webhook:', { leadId, email, name });
 
     if (!leadId) {
       console.warn('[KOMMO Create Player] No se encontró Lead ID en el payload');
       return NextResponse.json(
         { success: false, error: 'Lead ID not found in payload' },
+        { status: 400 }
+      );
+    }
+
+    // Si no hay email en el webhook, obtenerlo desde la API de KOMMO
+    if (!email) {
+      console.log('[KOMMO Create Player] Email no encontrado en webhook, consultando API de KOMMO...');
+
+      const kommoToken = process.env.KOMMO_ACCESS_TOKEN;
+      const kommoSubdomain = process.env.KOMMO_SUBDOMAIN;
+
+      if (!kommoToken || !kommoSubdomain) {
+        throw new Error('KOMMO_ACCESS_TOKEN o KOMMO_SUBDOMAIN no configurados');
+      }
+
+      try {
+        // Obtener el lead con sus contactos
+        const leadResponse = await fetch(
+          `https://${kommoSubdomain}.kommo.com/api/v4/leads/${leadId}?with=contacts`,
+          {
+            headers: {
+              'Authorization': `Bearer ${kommoToken}`,
+            },
+          }
+        );
+
+        if (!leadResponse.ok) {
+          throw new Error(`Error al obtener lead de KOMMO: ${leadResponse.status}`);
+        }
+
+        const leadData = await leadResponse.json();
+        console.log('[KOMMO Create Player] Lead data:', JSON.stringify(leadData, null, 2));
+
+        // Extraer contacto principal
+        const contactId = leadData._embedded?.contacts?.[0]?.id;
+
+        if (contactId) {
+          // Obtener detalles del contacto
+          const contactResponse = await fetch(
+            `https://${kommoSubdomain}.kommo.com/api/v4/contacts/${contactId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${kommoToken}`,
+              },
+            }
+          );
+
+          if (contactResponse.ok) {
+            const contactData = await contactResponse.json();
+            console.log('[KOMMO Create Player] Contact data:', JSON.stringify(contactData, null, 2));
+
+            // Buscar el campo de email
+            const emailField = contactData.custom_fields_values?.find(
+              (field: { field_code?: string; field_name?: string }) =>
+                field.field_code === 'EMAIL' || field.field_name === 'Email'
+            );
+
+            if (emailField && emailField.values?.[0]?.value) {
+              email = emailField.values[0].value;
+              console.log('[KOMMO Create Player] Email encontrado en API:', email);
+            }
+
+            // Buscar el nombre si no lo tenemos
+            if (!name && contactData.name) {
+              name = contactData.name;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[KOMMO Create Player] Error al obtener datos de KOMMO:', error);
+      }
+    }
+
+    if (!email) {
+      console.warn('[KOMMO Create Player] No se pudo obtener email ni del webhook ni de la API de KOMMO');
+      return NextResponse.json(
+        { success: false, error: 'Email not found in webhook or KOMMO API' },
         { status: 400 }
       );
     }
