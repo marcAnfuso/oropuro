@@ -137,11 +137,11 @@ function extractNameFromKommo(payload: KommoWebhookPayload): string | null {
 }
 
 /**
- * Genera username con formato: bet + 6 dígitos random
- * Ejemplo: bet123456, bet789012
+ * Genera username con formato: bet + 8 dígitos random
+ * Ejemplo: bet12345678, bet98765432
  */
 function generateUsername(): string {
-  const randomDigits = Math.floor(100000 + Math.random() * 900000); // 6 dígitos: 100000-999999
+  const randomDigits = Math.floor(10000000 + Math.random() * 90000000); // 8 dígitos: 10000000-99999999
   return `bet${randomDigits}`;
 }
 
