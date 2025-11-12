@@ -332,6 +332,7 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json-patch+json',
         'Authorization': `Bearer ${bearerToken}`,
+        'User-Agent': 'curl/8.0.1',
       },
       body: bodyString,
     });
