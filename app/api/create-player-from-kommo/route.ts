@@ -224,7 +224,22 @@ export async function POST(request: NextRequest) {
       throw new Error(`API error ${response.status}: ${responseText.substring(0, 200)}`);
     }
 
-    const result = await response.json();
+    // Intentar parsear la respuesta como JSON
+    const responseText = await response.text();
+    console.log('[KOMMO Create Player] Respuesta de bet30:', {
+      status: response.status,
+      contentType: response.headers.get('content-type'),
+      body: responseText.substring(0, 500)
+    });
+
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('[KOMMO Create Player] Error al parsear respuesta:', responseText.substring(0, 500));
+      throw new Error(`La API retornó contenido inválido (no JSON): ${responseText.substring(0, 200)}`);
+    }
+
     console.log('[KOMMO Create Player] Jugador creado exitosamente:', result);
 
     // Enviar credenciales al lead en KOMMO como nota
