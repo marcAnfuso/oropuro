@@ -167,6 +167,7 @@ export async function POST(request: NextRequest) {
     console.log('[KOMMO Create Player] Raw body (decoded):', decodeURIComponent(rawBody).substring(0, 1000));
 
     // Intentar parsear según el formato
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let payload: any;
 
     if (contentType?.includes('application/x-www-form-urlencoded')) {
@@ -186,10 +187,28 @@ export async function POST(request: NextRequest) {
 
     console.log('[KOMMO Create Player] Payload completo:', JSON.stringify(payload, null, 2));
 
-    // Extraer datos del contacto y lead
-    const email = extractEmailFromKommo(payload);
-    const name = extractNameFromKommo(payload);
-    const leadId = extractLeadIdFromKommo(payload);
+    // Extraer Lead ID directamente de los params
+    let leadId: number | null = null;
+    let email: string | null = null;
+    let name: string | null = null;
+
+    // Buscar en los params que vienen del webhook del Salesbot
+    for (const [key, value] of Object.entries(payload)) {
+      // Lead ID: leads[ad][0][id] o leads[add][0][id]
+      if (key.includes('leads[') && key.includes('[id]')) {
+        leadId = parseInt(value as string);
+      }
+      // Email: puede venir como custom_field o como param directo
+      if (key.toLowerCase().includes('email')) {
+        email = value as string;
+      }
+      // Name: puede venir del lead o contact
+      if (key.toLowerCase().includes('name') && !email) {
+        name = value as string;
+      }
+    }
+
+    console.log('[KOMMO Create Player] Datos extraídos:', { leadId, email, name });
 
     if (!email) {
       console.warn('[KOMMO Create Player] No se encontró email en el payload');
@@ -258,7 +277,7 @@ export async function POST(request: NextRequest) {
     let result;
     try {
       result = JSON.parse(responseText);
-    } catch (parseError) {
+    } catch {
       console.error('[KOMMO Create Player] Error al parsear respuesta:', responseText.substring(0, 500));
       throw new Error(`La API retornó contenido inválido (no JSON): ${responseText.substring(0, 200)}`);
     }
