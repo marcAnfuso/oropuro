@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, Zap, Gamepad2, Headset, Play } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 import { useMetaTracking } from "./hooks/useMetaTracking";
 
