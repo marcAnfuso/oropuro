@@ -287,19 +287,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Email es opcional - solo para logging
     if (!email) {
-      console.warn('[KOMMO Create Player] No se pudo obtener email ni del webhook ni de la API de KOMMO');
-      return NextResponse.json(
-        { success: false, error: 'Email not found in webhook or KOMMO API' },
-        { status: 400 }
-      );
+      console.warn('[KOMMO Create Player] No se pudo obtener email (opcional - solo para logs)');
     }
 
     // Generar datos del player
     const username = generateUsername(); // bet + 6 dígitos random
     const password = generatePassword(); // Password simple
 
-    console.log('[KOMMO Create Player] Creando jugador:', { username, email, name });
+    console.log('[KOMMO Create Player] Creando jugador:', { username, email: email || 'N/A', name: name || 'N/A' });
 
     // Crear jugador en la plataforma
     const playerData = {
