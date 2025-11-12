@@ -48,8 +48,8 @@ async function sendCredentialsToKommo(
   username: string,
   password: string
 ): Promise<void> {
-  const kommoToken = process.env.KOMMO_ACCESS_TOKEN;
-  const kommoSubdomain = process.env.KOMMO_SUBDOMAIN;
+  const kommoToken = process.env.KOMMO_ACCESS_TOKEN?.trim();
+  const kommoSubdomain = process.env.KOMMO_SUBDOMAIN?.trim();
 
   if (!kommoToken || !kommoSubdomain) {
     console.warn('[KOMMO Create Player] KOMMO_ACCESS_TOKEN o KOMMO_SUBDOMAIN no configurados');
@@ -222,8 +222,8 @@ export async function POST(request: NextRequest) {
     if (!email) {
       console.log('[KOMMO Create Player] Email no encontrado en webhook, consultando API de KOMMO...');
 
-      const kommoToken = process.env.KOMMO_ACCESS_TOKEN;
-      const kommoSubdomain = process.env.KOMMO_SUBDOMAIN;
+      const kommoToken = process.env.KOMMO_ACCESS_TOKEN?.trim();
+      const kommoSubdomain = process.env.KOMMO_SUBDOMAIN?.trim();
 
       if (!kommoToken || !kommoSubdomain) {
         throw new Error('KOMMO_ACCESS_TOKEN o KOMMO_SUBDOMAIN no configurados');
@@ -307,7 +307,7 @@ export async function POST(request: NextRequest) {
       language: "es"
     };
 
-    const bearerToken = process.env.PLAYER_API_TOKEN;
+    const bearerToken = process.env.PLAYER_API_TOKEN?.trim();
     if (!bearerToken) {
       throw new Error('PLAYER_API_TOKEN no configurado en variables de entorno');
     }
