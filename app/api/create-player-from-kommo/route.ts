@@ -327,45 +327,71 @@ export async function POST(request: NextRequest) {
     console.log('[KOMMO Create Player] Body exacto:', JSON.stringify(playerData));
 
     try {
-      const response = await axios.post(
-        'https://admin.bet30.store/api/services/app/Players/AddPlayer',
-        playerData,
-        {
-          headers: {
-            'Content-Type': 'application/json-patch+json',
-            'Authorization': `Bearer ${bearerToken}`,
-            'User-Agent': 'curl/8.0.1',
+      // Usar proxy si está configurado, sino directo a bet30
+      const proxyUrl = process.env.BET30_PROXY_URL?.trim();
+      let result;
+
+      if (proxyUrl) {
+        console.log('[KOMMO Create Player] Usando proxy:', proxyUrl);
+
+        // Request al proxy en tu máquina
+        const proxyResponse = await axios.post(
+          `${proxyUrl}/create-player`,
+          {
+            playerData,
+            bearerToken
           },
-          // Forzar que axios NO redirija automáticamente
-          maxRedirects: 0,
-          // Forzar validación de status codes
-          validateStatus: () => true,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000, // 10 segundos timeout
+          }
+        );
+
+        console.log('[KOMMO Create Player] Respuesta del proxy:', proxyResponse.data);
+
+        if (!proxyResponse.data.success) {
+          throw new Error(`Proxy error: ${proxyResponse.data.error || 'Unknown error'}`);
         }
-      );
 
-      console.log('[KOMMO Create Player] Respuesta de bet30:', {
-        status: response.status,
-        statusText: response.statusText,
-        contentType: response.headers['content-type'],
-        data: typeof response.data === 'string'
-          ? response.data.substring(0, 500)
-          : JSON.stringify(response.data).substring(0, 500)
-      });
+        result = proxyResponse.data.data;
 
-      // Verificar si es HTML (error)
-      if (response.headers['content-type']?.includes('text/html')) {
-        const htmlPreview = typeof response.data === 'string'
-          ? response.data.substring(0, 500)
-          : String(response.data).substring(0, 500);
-        console.error('[KOMMO Create Player] bet30 retornó HTML en lugar de JSON:', htmlPreview);
-        throw new Error(`bet30 API retornó HTML (status ${response.status}). Posible problema de autenticación o firewall.`);
+      } else {
+        console.log('[KOMMO Create Player] Proxy no configurado, intentando directo a bet30...');
+
+        // Request directo a bet30 (fallback si no hay proxy)
+        const response = await axios.post(
+          'https://admin.bet30.store/api/services/app/Players/AddPlayer',
+          playerData,
+          {
+            headers: {
+              'Content-Type': 'application/json-patch+json',
+              'Authorization': `Bearer ${bearerToken}`,
+              'User-Agent': 'curl/8.0.1',
+            },
+            maxRedirects: 0,
+            validateStatus: () => true,
+          }
+        );
+
+        console.log('[KOMMO Create Player] Respuesta de bet30:', {
+          status: response.status,
+          statusText: response.statusText,
+          contentType: response.headers['content-type'],
+        });
+
+        // Verificar si es HTML (error)
+        if (response.headers['content-type']?.includes('text/html')) {
+          throw new Error(`bet30 API retornó HTML (status ${response.status}). Posible problema de autenticación o firewall.`);
+        }
+
+        if (response.status !== 200) {
+          throw new Error(`bet30 API error: ${response.status} ${response.statusText}`);
+        }
+
+        result = response.data;
       }
-
-      if (response.status !== 200) {
-        throw new Error(`bet30 API error: ${response.status} ${response.statusText}`);
-      }
-
-      const result = response.data;
 
       console.log('[KOMMO Create Player] Jugador creado exitosamente:', result);
 
