@@ -185,6 +185,88 @@ Podés iniciar sesión en: https://bet30.blog`;
 }
 
 /**
+ * Actualiza los custom fields del lead con username y password
+ */
+async function updateLeadCustomFields(
+  leadId: number,
+  username: string,
+  password: string
+): Promise<boolean> {
+  const kommoToken = process.env.KOMMO_ACCESS_TOKEN?.trim();
+  const kommoSubdomain = process.env.KOMMO_SUBDOMAIN?.trim();
+  const usernameFieldId = process.env.KOMMO_USERNAME_FIELD_ID?.trim();
+  const passwordFieldId = process.env.KOMMO_PASSWORD_FIELD_ID?.trim();
+
+  if (!kommoToken || !kommoSubdomain) {
+    console.warn('[KOMMO Create Player] KOMMO_ACCESS_TOKEN o KOMMO_SUBDOMAIN no configurados');
+    return false;
+  }
+
+  if (!usernameFieldId || !passwordFieldId) {
+    console.warn('[KOMMO Create Player] KOMMO_USERNAME_FIELD_ID o KOMMO_PASSWORD_FIELD_ID no configurados');
+    return false;
+  }
+
+  try {
+    const payload = {
+      custom_fields_values: [
+        {
+          field_id: parseInt(usernameFieldId),
+          values: [
+            {
+              value: username,
+            },
+          ],
+        },
+        {
+          field_id: parseInt(passwordFieldId),
+          values: [
+            {
+              value: password,
+            },
+          ],
+        },
+      ],
+    };
+
+    console.log('[KOMMO Create Player] Actualizando custom fields del lead:', {
+      leadId,
+      usernameFieldId,
+      passwordFieldId,
+    });
+
+    const response = await fetch(
+      `https://${kommoSubdomain}.kommo.com/api/v4/leads/${leadId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${kommoToken}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[KOMMO Create Player] Error al actualizar custom fields:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+      });
+      return false;
+    }
+
+    const result = await response.json();
+    console.log('[KOMMO Create Player] Custom fields actualizados exitosamente:', result);
+    return true;
+  } catch (error) {
+    console.error('[KOMMO Create Player] Error al actualizar custom fields:', error);
+    return false;
+  }
+}
+
+/**
  * Extrae el email del payload de KOMMO
  */
 function extractEmailFromKommo(payload: KommoWebhookPayload): string | null {
@@ -478,6 +560,9 @@ export async function POST(request: NextRequest) {
 
       console.log('[KOMMO Create Player] Jugador creado exitosamente:', result);
 
+      // Actualizar custom fields del lead con las credenciales
+      const customFieldsUpdated = await updateLeadCustomFields(leadId, username, password);
+
       // Primero intentar enviar mensaje directo via WhatsApp
       const whatsappSent = await sendWhatsAppMessageToUser(leadId, username, password);
 
@@ -493,6 +578,7 @@ export async function POST(request: NextRequest) {
         username: username,
         password: password, // IMPORTANTE: En producción, nunca devuelvas la password en la respuesta
         player_data: result,
+        custom_fields_updated: customFieldsUpdated,
         whatsapp_sent: whatsappSent,
         kommo_note_sent: !whatsappSent, // Solo se envía nota si WhatsApp falla
       });
