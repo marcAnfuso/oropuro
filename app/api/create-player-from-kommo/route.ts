@@ -158,10 +158,33 @@ function generatePassword(): string {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const payload: KommoWebhookPayload = body;
+    // Log del Content-Type para ver qué formato está enviando KOMMO
+    const contentType = request.headers.get('content-type');
+    console.log('[KOMMO Create Player] Content-Type recibido:', contentType);
 
-    console.log('[KOMMO Create Player] Payload recibido:', JSON.stringify(payload, null, 2));
+    // Leer el body como texto primero para ver qué formato tiene
+    const rawBody = await request.text();
+    console.log('[KOMMO Create Player] Raw body:', rawBody.substring(0, 500));
+
+    // Intentar parsear según el formato
+    let payload: KommoWebhookPayload;
+
+    if (contentType?.includes('application/x-www-form-urlencoded')) {
+      // KOMMO envía form-urlencoded, necesitamos parsearlo
+      const params = new URLSearchParams(rawBody);
+      const leadString = params.get('leads');
+      const contactString = params.get('contacts');
+
+      payload = {
+        leads: leadString ? JSON.parse(decodeURIComponent(leadString)) : undefined,
+        contacts: contactString ? JSON.parse(decodeURIComponent(contactString)) : undefined,
+      };
+    } else {
+      // Asumir JSON
+      payload = JSON.parse(rawBody);
+    }
+
+    console.log('[KOMMO Create Player] Payload parseado:', JSON.stringify(payload, null, 2));
 
     // Extraer datos del contacto y lead
     const email = extractEmailFromKommo(payload);
