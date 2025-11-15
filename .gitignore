@@ -48,11 +48,6 @@ wrangler.toml
 *.tsbuildinfo
 next-env.d.ts
 
-# claude
-.claude
-CLAUDE.md
-ZEUS_CHARACTER_PROMPT.md
-
 # IDE
 .vscode
 .idea
@@ -64,9 +59,11 @@ ZEUS_CHARACTER_PROMPT.md
 .DS_Store
 Thumbs.db
 
-# Optional: archivos temporales
+# Temporary files
 *.tmp
 *.temp
 .cache
 
-proxy-bet30.js
+# PM2 logs
+logs/
+*.log

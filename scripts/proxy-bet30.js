@@ -15,7 +15,7 @@ const express = require('express');
 const axios = require('axios');
 
 const app = express();
-const PORT = 3001;
+const PORT = 3002; // Cambiado a 3002 porque 3001 está ocupado por Next.js dev
 
 // Middleware para parsear JSON
 app.use(express.json());

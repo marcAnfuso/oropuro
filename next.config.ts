@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // output: 'export', // Comentado para permitir API routes (server-side)
+  // Standalone output for self-hosting (VPS, DigitalOcean, etc)
+  output: 'standalone',
   images: {
     unoptimized: true,
   },
