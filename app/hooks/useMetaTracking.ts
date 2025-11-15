@@ -40,8 +40,8 @@ export function useMetaTracking() {
 
   // Eventos específicos predefinidos para facilitar el uso
   const trackLead = useCallback((source: string) => {
-    // Disparar Purchase con valor estimado para ROAS tracking
-    trackEvent('Purchase', {
+    // Disparar evento custom ClickWhatsApp1
+    trackEvent('ClickWhatsApp1', {
       content_name: 'Solicitud de Usuario WhatsApp',
       content_category: 'Lead Generation',
       content_type: 'whatsapp_click',
