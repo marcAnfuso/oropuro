@@ -8,7 +8,7 @@
         "whatsapp_scope_id": "env:KOMMO_WHATSAPP_SCOPE_ID",
         "username_field_id": 1492038,
         "password_field_id": 1492040,
-        "comprobante_status_id": 142
+        "comprobante_status_id": 96367691
       },
       "backend": {
         "type": "bet30",
