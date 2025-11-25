@@ -3,9 +3,9 @@
     "bet30": {
       "name": "bet30",
       "kommo": {
-        "access_token": "env:KOMMO_ACCESS_TOKEN",
+        "access_token": "env:BET30_KOMMO_ACCESS_TOKEN",
         "subdomain": "lorenzogu32",
-        "whatsapp_scope_id": "env:KOMMO_WHATSAPP_SCOPE_ID",
+        "whatsapp_scope_id": "env:BET30_KOMMO_WHATSAPP_SCOPE_ID",
         "username_field_id": 1492038,
         "password_field_id": 1492040,
         "comprobante_status_id": 96367691
@@ -13,27 +13,19 @@
       "backend": {
         "type": "bet30",
         "api_url": "https://admin.bet30.store/api/services/app/Players/AddPlayer",
-        "api_token": "env:PLAYER_API_TOKEN",
-        "skin_id": "1025c6bf14cd",
-        "proxy_url": "env:BET30_PROXY_URL"
-      }
-    },
-    "otro-casino": {
-      "name": "Otro Casino",
-      "kommo": {
-        "access_token": "env:OTRO_KOMMO_TOKEN",
-        "subdomain": "otrocasino",
-        "whatsapp_scope_id": "env:OTRO_WHATSAPP_SCOPE_ID",
-        "username_field_id": 9999,
-        "password_field_id": 9998,
-        "comprobante_status_id": 150
+        "api_token": "env:BET30_PLAYER_API_TOKEN",
+        "skin_id": "1025c6bf14cd"
       },
-      "backend": {
-        "type": "bet30",
-        "api_url": "https://admin.otroplataforma.com/api/players",
-        "api_token": "env:OTRO_BET30_TOKEN",
-        "skin_id": "diferente123",
-        "proxy_url": null
+      "google": {
+        "client_id": "env:BET30_GOOGLE_CLIENT_ID",
+        "client_secret": "env:BET30_GOOGLE_CLIENT_SECRET",
+        "refresh_token": "env:BET30_GOOGLE_REFRESH_TOKEN"
+      },
+      "proxy": {
+        "host": "env:DECODO_PROXY_HOST",
+        "port": "env:DECODO_PROXY_PORT",
+        "username": "env:DECODO_PROXY_USERNAME",
+        "password": "env:DECODO_PROXY_PASSWORD"
       }
     }
   }

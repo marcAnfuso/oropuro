@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { createGoogleContact } from '@/lib/google-contacts';
 
 interface KommoWebhookPayload {
   leads?: {
@@ -357,6 +358,7 @@ export async function POST(request: NextRequest) {
     let leadId: number | null = null;
     let email: string | null = null;
     let name: string | null = null;
+    let phone: string | null = null;
 
     // Buscar en los params que vienen del webhook del Salesbot
     for (const [key, value] of Object.entries(payload)) {
@@ -368,13 +370,17 @@ export async function POST(request: NextRequest) {
       if (key.toLowerCase().includes('email')) {
         email = value as string;
       }
+      // Phone: puede venir como custom_field o como param directo
+      if (key.toLowerCase().includes('phone') || key.toLowerCase().includes('telefono')) {
+        phone = value as string;
+      }
       // Name: puede venir del lead o contact
       if (key.toLowerCase().includes('name') && !email) {
         name = value as string;
       }
     }
 
-    console.log('[KOMMO Create Player] Datos extraídos del webhook:', { leadId, email, name });
+    console.log('[KOMMO Create Player] Datos extraídos del webhook:', { leadId, email, name, phone });
 
     if (!leadId) {
       console.warn('[KOMMO Create Player] No se encontró Lead ID en el payload');
@@ -442,6 +448,17 @@ export async function POST(request: NextRequest) {
               console.log('[KOMMO Create Player] Email encontrado en API:', email);
             }
 
+            // Buscar el campo de teléfono
+            const phoneField = contactData.custom_fields_values?.find(
+              (field: { field_code?: string; field_name?: string }) =>
+                field.field_code === 'PHONE' || field.field_name === 'Phone' || field.field_name === 'Teléfono'
+            );
+
+            if (phoneField && phoneField.values?.[0]?.value) {
+              phone = phoneField.values[0].value;
+              console.log('[KOMMO Create Player] Teléfono encontrado en API:', phone);
+            }
+
             // Buscar el nombre si no lo tenemos
             if (!name && contactData.name) {
               name = contactData.name;
@@ -492,76 +509,75 @@ export async function POST(request: NextRequest) {
     console.log('[KOMMO Create Player] Body exacto:', JSON.stringify(playerData));
 
     try {
-      // Usar proxy si está configurado, sino directo a bet30
-      const proxyUrl = process.env.BET30_PROXY_URL?.trim();
-      let result;
+      // Configurar proxy de Decodo (residencial)
+      const proxyHost = process.env.DECODO_PROXY_HOST?.trim();
+      const proxyPort = process.env.DECODO_PROXY_PORT?.trim();
+      const proxyUsername = process.env.DECODO_PROXY_USERNAME?.trim();
+      const proxyPassword = process.env.DECODO_PROXY_PASSWORD?.trim();
 
-      if (proxyUrl) {
-        console.log('[KOMMO Create Player] Usando proxy:', proxyUrl);
+      let axiosConfig: any = {
+        headers: {
+          'Content-Type': 'application/json-patch+json',
+          'Authorization': `Bearer ${bearerToken}`,
+          'User-Agent': 'Mozilla/5.0',
+        },
+        timeout: 30000, // 30 segundos
+      };
 
-        // Request al proxy en tu máquina
-        const proxyResponse = await axios.post(
-          `${proxyUrl}/create-player`,
-          {
-            playerData,
-            bearerToken
+      // Agregar proxy si está configurado
+      if (proxyHost && proxyPort && proxyUsername && proxyPassword) {
+        console.log('[KOMMO Create Player] Usando proxy residencial Decodo');
+        axiosConfig.proxy = {
+          host: proxyHost,
+          port: parseInt(proxyPort),
+          auth: {
+            username: proxyUsername,
+            password: proxyPassword,
           },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            timeout: 10000, // 10 segundos timeout
-          }
-        );
-
-        console.log('[KOMMO Create Player] Respuesta del proxy:', proxyResponse.data);
-
-        if (!proxyResponse.data.success) {
-          throw new Error(`Proxy error: ${proxyResponse.data.error || 'Unknown error'}`);
-        }
-
-        result = proxyResponse.data.data;
-
+        };
       } else {
-        console.log('[KOMMO Create Player] Proxy no configurado, intentando directo a bet30...');
-
-        // Request directo a bet30 (fallback si no hay proxy)
-        const response = await axios.post(
-          'https://admin.bet30.store/api/services/app/Players/AddPlayer',
-          playerData,
-          {
-            headers: {
-              'Content-Type': 'application/json-patch+json',
-              'Authorization': `Bearer ${bearerToken}`,
-              'User-Agent': 'curl/8.0.1',
-            },
-            maxRedirects: 0,
-            validateStatus: () => true,
-          }
-        );
-
-        console.log('[KOMMO Create Player] Respuesta de bet30:', {
-          status: response.status,
-          statusText: response.statusText,
-          contentType: response.headers['content-type'],
-        });
-
-        // Verificar si es HTML (error)
-        if (response.headers['content-type']?.includes('text/html')) {
-          throw new Error(`bet30 API retornó HTML (status ${response.status}). Posible problema de autenticación o firewall.`);
-        }
-
-        if (response.status !== 200) {
-          throw new Error(`bet30 API error: ${response.status} ${response.statusText}`);
-        }
-
-        result = response.data;
+        console.log('[KOMMO Create Player] Proxy no configurado, request directo a bet30');
       }
+
+      const response = await axios.post(
+        'https://admin.bet30.store/api/services/app/Players/AddPlayer',
+        playerData,
+        axiosConfig
+      );
+
+      console.log('[KOMMO Create Player] Respuesta de bet30:', {
+        status: response.status,
+        statusText: response.statusText,
+        contentType: response.headers['content-type'],
+      });
+
+      // Verificar si es HTML (error de firewall)
+      if (response.headers['content-type']?.includes('text/html')) {
+        throw new Error(`bet30 API retornó HTML (status ${response.status}). IP bloqueada por firewall.`);
+      }
+
+      if (response.status !== 200) {
+        throw new Error(`bet30 API error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = response.data;
 
       console.log('[KOMMO Create Player] Jugador creado exitosamente:', result);
 
       // Actualizar custom fields del lead con las credenciales
       const customFieldsUpdated = await updateLeadCustomFields(leadId, username, password);
+
+      // Crear contacto en Google Contacts (si hay nombre y teléfono)
+      let googleContactCreated = false;
+      if (name && phone) {
+        googleContactCreated = await createGoogleContact({
+          name,
+          phone,
+          email: email || undefined,
+        });
+      } else {
+        console.warn('[KOMMO Create Player] No se pudo crear contacto en Google - falta nombre o teléfono');
+      }
 
       // Primero intentar enviar mensaje directo via WhatsApp
       const whatsappSent = await sendWhatsAppMessageToUser(leadId, username, password);
@@ -579,6 +595,7 @@ export async function POST(request: NextRequest) {
         password: password, // IMPORTANTE: En producción, nunca devuelvas la password en la respuesta
         player_data: result,
         custom_fields_updated: customFieldsUpdated,
+        google_contact_created: googleContactCreated,
         whatsapp_sent: whatsappSent,
         kommo_note_sent: !whatsappSent, // Solo se envía nota si WhatsApp falla
       });

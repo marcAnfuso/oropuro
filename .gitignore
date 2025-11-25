@@ -51,6 +51,7 @@ next-env.d.ts
 # IDE
 .vscode
 .idea
+.claude
 *.swp
 *.swo
 *~
@@ -67,3 +68,7 @@ Thumbs.db
 # PM2 logs
 logs/
 *.log
+
+CLAUDE.md
+DEPLOY_DIGITALOCEAN.md
+DEPLOY_DOCKER.md
