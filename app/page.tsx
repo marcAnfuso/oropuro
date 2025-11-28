@@ -310,13 +310,34 @@ export default function Home() {
                   </defs>
                 </svg>
               </div>
+
+              {/* Green WhatsApp button - right below Soporte */}
+              <motion.a
+                href="https://wa.pe/w6F8J2YMe5"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => handleWhatsAppClick('secondary_button')}
+                className="bg-green-700 active:bg-green-800 border-2 border-green-600 text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 mt-2"
+                whileTap={{ scale: 0.95 }}
+              >
+                <WhatsAppIcon className="w-4 h-4 text-white" />
+                <span>Escribinos, en línea 24Hs</span>
+              </motion.a>
+
+              {/* Trust indicator - visible without scroll */}
+              <div className="flex items-center justify-center gap-2 mt-2 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-semibold text-white">+10.000 usuarios activos</span>
+              </div>
             </motion.div>
           </div>
 
           {/* Spacer to maintain layout and center the background Joker */}
-          <div className="w-full max-w-[550px] flex-shrink-0 my-36"></div>
+          <div className="w-full max-w-[550px] flex-shrink-0 my-16"></div>
 
-          {/* Bottom Section: Buttons - SMALLER */}
+          {/* Bottom Section: Main CTA Button */}
           <div className="w-full max-w-sm px-4">
             <div className="flex flex-col gap-3">
               <motion.a
@@ -396,30 +417,10 @@ export default function Home() {
                 />
               </motion.a>
 
-              <motion.a
-                href="https://wa.pe/w6F8J2YMe5"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => handleWhatsAppClick('secondary_button')}
-                className="bg-green-700 active:bg-green-800 border-2 border-green-600 text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 w-4/5 mx-auto"
-                whileTap={{ scale: 0.95 }}
-              >
-                <WhatsAppIcon className="w-4 h-4 text-white" />
-                <span>Escribinos, en línea 24Hs</span>
-              </motion.a>
-
-              {/* Trust indicators */}
-              <div className="flex flex-col gap-2 mt-3 bg-black/30 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm font-semibold text-white">+10.000 usuarios activos</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-lg font-semibold text-white">+18</span>
-                  <span className="text-sm font-semibold text-white">Juego Responsable</span>
-                </div>
+              {/* +18 indicator at bottom */}
+              <div className="flex items-center justify-center gap-2 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+                <span className="text-lg font-semibold text-white">+18</span>
+                <span className="text-sm font-semibold text-white">Juego Responsable</span>
               </div>
             </div>
           </div>
