@@ -335,11 +335,51 @@ export default function Home() {
           </div>
 
           {/* Spacer to maintain layout and center the background Joker */}
-          <div className="w-full max-w-[550px] flex-shrink-0 my-16"></div>
+          <div className="w-full max-w-[550px] flex-shrink-0 my-10"></div>
 
           {/* Bottom Section: Main CTA Button */}
           <div className="w-full max-w-sm px-4">
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              {/* 30% EXTRA Banner - Mobile */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex justify-center mb-1"
+              >
+                <motion.div
+                  className="relative px-6 py-2 rounded-xl overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
+                    boxShadow: '0 0 30px rgba(251, 191, 36, 0.6), inset 0 1px 0 rgba(255,255,255,0.3)',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                  }}
+                  animate={{
+                    boxShadow: [
+                      '0 0 30px rgba(251, 191, 36, 0.6), inset 0 1px 0 rgba(255,255,255,0.3)',
+                      '0 0 50px rgba(251, 191, 36, 0.9), inset 0 1px 0 rgba(255,255,255,0.3)',
+                      '0 0 30px rgba(251, 191, 36, 0.6), inset 0 1px 0 rgba(255,255,255,0.3)',
+                    ],
+                  }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="text-black font-black text-xl tracking-tight drop-shadow-sm">
+                      30% EXTRA
+                    </span>
+                    <span className="text-black/80 font-bold text-xs tracking-wide">
+                      en tu primer carga
+                    </span>
+                  </div>
+                  {/* Shine effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+                  />
+                </motion.div>
+              </motion.div>
+
               <motion.a
                 href="https://wa.pe/w6F8J2YMe5"
                 target="_blank"
@@ -442,6 +482,47 @@ export default function Home() {
               className="w-full h-auto mx-auto relative z-10"
               style={{maxHeight: '364px', objectFit: 'contain'}}
             />
+          </motion.div>
+
+          {/* 30% EXTRA Banner - Desktop */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex justify-center -mt-4 mb-4"
+          >
+            <motion.div
+              className="relative px-10 py-4 rounded-2xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
+                boxShadow: '0 0 40px rgba(251, 191, 36, 0.6), inset 0 2px 0 rgba(255,255,255,0.3)',
+                border: '3px solid rgba(255,255,255,0.3)',
+              }}
+              animate={{
+                boxShadow: [
+                  '0 0 40px rgba(251, 191, 36, 0.6), inset 0 2px 0 rgba(255,255,255,0.3)',
+                  '0 0 60px rgba(251, 191, 36, 0.9), inset 0 2px 0 rgba(255,255,255,0.3)',
+                  '0 0 40px rgba(251, 191, 36, 0.6), inset 0 2px 0 rgba(255,255,255,0.3)',
+                ],
+                scale: [1, 1.02, 1],
+              }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-black font-black text-3xl tracking-tight drop-shadow-sm">
+                  30% EXTRA
+                </span>
+                <span className="text-black/80 font-bold text-xl">
+                  en tu primer carga
+                </span>
+              </div>
+              {/* Shine effect */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                animate={{ x: ['-100%', '200%'] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+              />
+            </motion.div>
           </motion.div>
 
           {/* Three column layout - Cards Left, Zeus Center, Buttons Right */}
