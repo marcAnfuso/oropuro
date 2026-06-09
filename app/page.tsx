@@ -313,7 +313,7 @@ export default function Home() {
 
               {/* Green WhatsApp button - right below Soporte */}
               <motion.a
-                href="https://wa.pe/w6F8J2YMe5"
+                href="https://wa.pe/1d3aiE1q6y"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => handleWhatsAppClick('secondary_button')}
@@ -381,7 +381,7 @@ export default function Home() {
               </motion.div>
 
               <motion.a
-                href="https://wa.pe/w6F8J2YMe5"
+                href="https://wa.pe/1d3aiE1q6y"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => handleWhatsAppClick('main_button')}
@@ -609,7 +609,7 @@ export default function Home() {
               {/* CTA Buttons */}
               <div className="flex flex-col gap-4 w-full">
                 <motion.a
-                  href="https://wa.pe/w6F8J2YMe5"
+                  href="https://wa.pe/1d3aiE1q6y"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => handleWhatsAppClick('main_button')}
@@ -674,7 +674,7 @@ export default function Home() {
                 </motion.a>
 
                 <motion.a
-                  href="https://wa.pe/w6F8J2YMe5"
+                  href="https://wa.pe/1d3aiE1q6y"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => handleWhatsAppClick('secondary_button')}
